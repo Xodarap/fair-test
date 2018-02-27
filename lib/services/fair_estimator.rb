@@ -23,7 +23,15 @@ class FairEstimator
 
       max_bids.map do |currency, bid_price|
         ask_price = max_asks[currency]
-        [currency, (bid_price + ask_price)/2]
+        fair = if bid_price.nil?
+          ask_price
+        elsif ask_price.nil?
+          bid_price
+        else
+          (bid_price + ask_price)/2
+        end
+
+        [currency, fair]
       end.to_h
     end
 
@@ -51,6 +59,12 @@ class FairEstimator
     ActiveRecord::Base.connection.execute('select * from fairs').map do |fair|
       [[fair['buy_currency'],  fair['sell_currency']], fair['fair']]
     end.to_h
+  end
+
+  def get_fairs_hybrid
+    bids, asks = ClearedOrder.all.sort_by(&:price)
+      .partition { |order| order.side == 'buy' }
+    OrderBook.new(bids, asks).get_fairs
   end
 
   private
