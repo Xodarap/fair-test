@@ -8,11 +8,10 @@ class FairEstimator < ActiveRecord::Migration
       inner join (
           select buy_currency, sell_currency,
           price
-          from  cleared_orders
+          from cleared_orders
           where side = 'sell'
       ) sell
-      on sell.buy_currency = buy.buy_currency
-      and sell.sell_currency = buy.sell_currency
+      using (buy_currency, sell_currency)
       where buy.side = 'buy'
       group by buy.buy_currency, buy.sell_currency;
     SQL

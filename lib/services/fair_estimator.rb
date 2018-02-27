@@ -12,7 +12,7 @@ class FairEstimator
         lowest_ask.quantity -= order.quantity
       else
         order.quantity -= lowest_ask.quantity
-        @asks.pop
+        @asks.shift
         execute_or_add_bid(order)
       end
     end
@@ -62,9 +62,14 @@ class FairEstimator
   end
 
   def get_fairs_hybrid
-    bids, asks = ClearedOrder.all.sort_by(&:price)
-      .partition { |order| order.side == 'buy' }
+    bids, asks = ClearedOrder.all.sort_by(&:price)      .partition { |order| order.side == 'buy' }
     OrderBook.new(bids, asks).get_fairs
+  end
+
+  def get_fairs_fast
+    ActiveRecord::Base.connection.execute('select * from fast_fair').map do |fair|
+      [[fair['buy_currency'],  fair['sell_currency']], fair['fair']]
+    end.to_h
   end
 
   private
