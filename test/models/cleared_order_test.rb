@@ -5,13 +5,13 @@ class ClearedOrderTest < ActiveSupport::TestCase
   fixtures :all
 
   test 'correct count' do
-    assert_equal 1, ClearedOrder.where(side: 'buy').count
-    assert_equal 1, ClearedOrder.where(side: 'sell').count
+    assert_equal 2, ClearedOrder.where(side: 'buy').count
+    assert_equal 2, ClearedOrder.where(side: 'sell').count
   end
 
   test 'not overlapping orders' do
     orders = ActiveRecord::Base.connection.execute 'select * from not_overlapping_orders;'
-    assert_equal 1, orders.count
+    assert_equal 3, orders.count
   end
 
   test 'price extremes' do

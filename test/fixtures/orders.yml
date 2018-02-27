@@ -16,7 +16,7 @@ three:
   buy_currency: 'BTW'
   sell_currency: 'ABC'
   side: 'buy'
-  price: 100
+  price: 99
   quantity: 10
 
 over:
@@ -30,5 +30,19 @@ over2:
   buy_currency: 'BTW'
   sell_currency: 'ABC'
   side: 'sell'
-  price: 90
+  price: 95
+  quantity: 5
+
+ridiculous:
+  buy_currency: 'BTW'
+  sell_currency: 'ABC'
+  side: 'sell'
+  price: 90000
+  quantity: 5
+
+ridiculous_Bid:
+  buy_currency: 'BTW'
+  sell_currency: 'ABC'
+  side: 'buy'
+  price: 1
   quantity: 5

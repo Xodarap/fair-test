@@ -17,7 +17,8 @@ class FairEstimator
   end
 
   def get_fairs_hybrid
-    bids, asks = ClearedOrder.all.sort_by(&:price)      .partition { |order| order.side == 'buy' }
+    bids, asks = ClearedOrder.all.sort_by(&:price)
+      .partition { |order| order.side == 'buy' }
     OrderBook.new(bids, asks).get_fairs
   end
 
