@@ -1,0 +1,13 @@
+one:
+  buy_currency: 'BTW'
+  sell_currency: 'ABC'
+  side: 'buy'
+  price: 100
+  quantity: 10
+
+two:
+  buy_currency: 'BTW'
+  sell_currency: 'ABC'
+  side: 'sell'
+  price: 110
+  quantity: 10
