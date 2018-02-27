@@ -12,7 +12,21 @@ two:
   price: 110
   quantity: 10
 
+three:
+  buy_currency: 'BTW'
+  sell_currency: 'ABC'
+  side: 'buy'
+  price: 100
+  quantity: 10
+
 over:
+  buy_currency: 'BTW'
+  sell_currency: 'ABC'
+  side: 'sell'
+  price: 90
+  quantity: 5
+
+over2:
   buy_currency: 'BTW'
   sell_currency: 'ABC'
   side: 'sell'

@@ -1,9 +1,8 @@
 class ClearedOrders < ActiveRecord::Migration
   def up
     execute <<-SQL
-      create view cleared_orders as
       --Highest bid/ask values per currency
-      with price_extremes as (
+      create view price_extremes as (
           select buy_currency, sell_currency, max(bid) max_bid, min(ask) min_ask
           from (
               select buy_currency, sell_currency, 
@@ -12,29 +11,28 @@ class ClearedOrders < ActiveRecord::Migration
               from orders
           ) labeled
           group by buy_currency, sell_currency
-      ),
+      );
       
       --Orders which would have been (at least partially) cleared if we were all on one exchange
-      overlapping_orders as (
+      create view overlapping_orders as (
           select 
           id, side, price, quantity, orders.buy_currency, orders.sell_currency,
-          sum(quantity) over (partition by side, orders.buy_currency, orders.sell_currency order by price) as cumulative_quantity
+          sum(quantity) over (partition by side order by price rows unbounded preceding) as cumulative_quantity
           from orders 
           inner join price_extremes using (buy_currency, sell_currency)
           where 
           (side = 'buy' and price > price_extremes.min_ask or
           side = 'sell' and price < price_extremes.max_bid)
-          order by cumulative_quantity
-      ),
+      );
       
       --Counts of how many bids and asks should have been cleared
-      overlap_statistics as (
+      create view overlap_statistics as (
           select buy_currency, sell_currency,
           max(case when side = 'buy' then cumulative_quantity else 0 end) maximum_bid_quantity,
           max(case when side = 'sell' then cumulative_quantity else 0 end) maximum_ask_quantity
           from overlapping_orders
           group by buy_currency, sell_currency
-      ),
+      );
       
       /*
       Subtracts the opposite action. E.g., suppose there were 100 overlapping asks. Then we would have:
@@ -47,7 +45,7 @@ class ClearedOrders < ActiveRecord::Migration
       We can then discard the first two orders and consider the third one to have just been
       an order for 50
       */
-      modified_overlapping_orders as (
+      create view modified_overlapping_orders as (
           select *
           from (
               select id, side, price, buy_currency, sell_currency,
@@ -59,10 +57,10 @@ class ClearedOrders < ActiveRecord::Migration
               inner join overlap_statistics using (buy_currency, sell_currency)
           ) adjusted_quantities
           where quantity > 0
-      ),
+      );
       
       --Orders which would not have been cleared if it was all one exchange
-      not_overlapping_orders as (
+      create view not_overlapping_orders as (
           select *
           from orders
           where not exists (
@@ -70,8 +68,9 @@ class ClearedOrders < ActiveRecord::Migration
               from overlapping_orders
               where overlapping_orders.id = orders.id
           )
-      )
+      );
       
+      create view cleared_orders as
       select id, side, price, quantity, buy_currency, sell_currency from not_overlapping_orders
       union 
       select id, side, price, quantity, buy_currency, sell_currency from modified_overlapping_orders;

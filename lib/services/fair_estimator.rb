@@ -1,55 +1,10 @@
-require 'attr_extras'
+require 'services/order_book'
+
+
+# Class which calculates the fair market value of everything
+#
+# Note: get_fairs_fast is the only function I would keep if this were real
 class FairEstimator
-  class OrderBook
-    attr_initialize :bids, :asks
-
-    def execute_or_add_bid(order)
-      lowest_ask = @asks.first
-      return add_bid(order) if lowest_ask.nil?
-      return add_bid(order) if order.price < lowest_ask.price
-
-      if order.quantity < lowest_ask.quantity
-        lowest_ask.quantity -= order.quantity
-      else
-        order.quantity -= lowest_ask.quantity
-        @asks.shift
-        execute_or_add_bid(order)
-      end
-    end
-
-    def get_fairs
-      max_bids = group_and_get_extrema(@bids, :max)
-      max_asks = group_and_get_extrema(@asks, :min)
-
-      max_bids.map do |currency, bid_price|
-        ask_price = max_asks[currency]
-        fair = if bid_price.nil?
-          ask_price
-        elsif ask_price.nil?
-          bid_price
-        else
-          (bid_price + ask_price)/2
-        end
-
-        [currency, fair]
-      end.to_h
-    end
-
-    private
-
-    def add_bid(order)
-      @bids = @bids.push(order)
-    end
-
-    def group_and_get_extrema(orders, extreme)
-      orders.group_by do |order|
-        [order.buy_currency, order.sell_currency]
-      end.transform_values do |orders|
-        orders.map(&:price).sort.send(extreme)
-      end
-    end
-  end
-
   def get_fairs_ruby
     cleared_orders = create_book(Order.all)
     cleared_orders.get_fairs
@@ -76,11 +31,6 @@ class FairEstimator
   def create_book(orders)
     bids, asks = orders.sort_by(&:price)
       .partition { |order| order.side == 'buy' }
-    book = OrderBook.new([], asks)
-
-    bids.reduce(book) do |book, order|
-      book.execute_or_add_bid(order)
-      book
-    end
+    OrderBook.new(bids, asks)
   end
 end
