@@ -1,0 +1,17 @@
+<% DEFAULT_DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432' %>
+
+default: &default
+  adapter: postgresql
+  schema_search_path: "public,shared_extensions"
+  encoding: utf8
+  pool: <%= ENV['POSTGRES_POOL_SIZE'] || 50 %>
+
+development:
+  <<: *default
+  database: fair-development
+  url: <%= ENV['DATABASE_URL'] || DEFAULT_DATABASE_URL %>
+
+test:
+  <<: *default
+  database: fair-test
+  url: <%= ENV['DATABASE_URL'] || DEFAULT_DATABASE_URL %>
